@@ -5,6 +5,7 @@ use crate::arch::{execution_mode::E1ExecutionCtx, VmSegmentState};
 pub struct E1Ctx {
     instret_end: u64,
     sp_ops: u64,
+    reg_ops: u64,
 }
 
 impl E1Ctx {
@@ -16,11 +17,16 @@ impl E1Ctx {
                 u64::MAX
             },
             sp_ops: 0,
+            reg_ops: 0,
         }
     }
 
     pub fn sp_ops(&self) -> u64 {
         self.sp_ops
+    }
+
+    pub fn reg_ops(&self) -> u64 {
+        self.reg_ops
     }
 }
 
@@ -32,13 +38,12 @@ impl Default for E1Ctx {
 
 impl E1ExecutionCtx for E1Ctx {
     #[inline(always)]
-    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, size: u32) {
-        println!(
-            "address_space = {}, ptr = {}, size = {}",
-            address_space, ptr, size
-        );
-        if address_space == RV32_REGISTER_AS && ptr == 2 {
-            self.sp_ops += 1
+    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, _size: u32) {
+        if address_space == RV32_REGISTER_AS {
+            self.reg_ops += 1;
+            if ptr == 8 {
+                self.sp_ops += 1
+            }
         }
     }
 

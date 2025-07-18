@@ -222,7 +222,11 @@ where
 
         let ctx = E1Ctx::new(num_insns);
         let state = interpreter.execute(ctx, inputs)?;
-        println!("stack pointer operations: {}", state.ctx.sp_ops());
+        println!(
+            "stack pointer operations: {}, total register operations = {}",
+            state.ctx.sp_ops(),
+            state.ctx.reg_ops(),
+        );
 
         Ok(VmState {
             instret: state.instret,
