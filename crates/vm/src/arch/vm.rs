@@ -273,7 +273,7 @@ where
                 .ctx
                 .stats()
                 .iter()
-                .filter(|((addr, ptr), _)| *addr == RV32_MEMORY_AS && *ptr == SP)
+                .filter(|((addr, ptr), _)| *addr == RV32_REGISTER_AS && *ptr == SP)
                 .map(|(_, cnt)| cnt)
                 .sum();
             println!("total stack pointer operations = {}", all_sp_ops);
@@ -282,7 +282,7 @@ where
                 .ctx
                 .loadstore_stats()
                 .iter()
-                .filter(|((addr, ptr), _)| *addr == RV32_MEMORY_AS && *ptr == SP)
+                .filter(|((addr, ptr), _)| *addr == RV32_REGISTER_AS && *ptr == SP)
                 .map(|(_, cnt)| cnt)
                 .sum();
             println!(

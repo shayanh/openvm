@@ -43,9 +43,9 @@ impl E1ExecutionCtx for E1Ctx {
         address_space: u32,
         ptr: u32,
         _size: u32,
-        is_load_store: bool,
+        is_loadstore: bool,
     ) {
-        if is_load_store {
+        if is_loadstore {
             *self
                 .loadstore_stats
                 .entry((address_space, ptr))
