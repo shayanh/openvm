@@ -32,7 +32,11 @@ impl Default for E1Ctx {
 
 impl E1ExecutionCtx for E1Ctx {
     #[inline(always)]
-    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, _size: u32) {
+    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, size: u32) {
+        println!(
+            "address_space = {}, ptr = {}, size = {}",
+            address_space, ptr, size
+        );
         if address_space == RV32_REGISTER_AS && ptr == 2 {
             self.sp_ops += 1
         }
