@@ -1,4 +1,4 @@
-use openvm_instructions::riscv::{RV32_REGISTER_AS, RV32_REGISTER_NUM_LIMBS};
+use openvm_instructions::riscv::RV32_REGISTER_AS;
 
 use crate::arch::{execution_mode::E1ExecutionCtx, VmSegmentState};
 
@@ -32,8 +32,8 @@ impl Default for E1Ctx {
 
 impl E1ExecutionCtx for E1Ctx {
     #[inline(always)]
-    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, size: u32) {
-        if address_space == RV32_REGISTER_AS && ptr == 2 && size == RV32_REGISTER_NUM_LIMBS as u32 {
+    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, _size: u32) {
+        if address_space == RV32_REGISTER_AS && ptr == 2 {
             self.sp_ops += 1
         }
     }
