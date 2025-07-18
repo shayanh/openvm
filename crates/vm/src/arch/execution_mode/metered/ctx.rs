@@ -195,7 +195,13 @@ impl<const PAGE_BITS: usize> MeteredCtx<PAGE_BITS> {
 
 impl<const PAGE_BITS: usize> E1ExecutionCtx for MeteredCtx<PAGE_BITS> {
     #[inline(always)]
-    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, size: u32) {
+    fn on_memory_operation(
+        &mut self,
+        address_space: u32,
+        ptr: u32,
+        size: u32,
+        _is_load_store: bool,
+    ) {
         debug_assert!(
             address_space != RV32_IMM_AS,
             "address space must not be immediate"

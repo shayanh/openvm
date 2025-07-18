@@ -9,6 +9,7 @@ use openvm_circuit::system::program::trace::compute_exe_commit;
 use openvm_instructions::{
     exe::{SparseMemoryImage, VmExe},
     program::Program,
+    riscv::{RV32_MEMORY_AS, RV32_REGISTER_AS},
 };
 use openvm_stark_backend::{
     config::{Com, Domain, StarkGenericConfig, Val},
@@ -222,11 +223,73 @@ where
 
         let ctx = E1Ctx::new(num_insns);
         let state = interpreter.execute(ctx, inputs)?;
-        println!(
-            "stack pointer operations: {}, total register operations = {}",
-            state.ctx.sp_ops(),
-            state.ctx.reg_ops(),
-        );
+
+        {
+            let all_register_ops: u64 = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!("total register operations = {}", all_register_ops);
+
+            let all_memory_ops: u64 = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, _), _)| *addr == RV32_MEMORY_AS)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!("total memory operations = {}", all_memory_ops);
+
+            let loadstore_register_ops: u64 = state
+                .ctx
+                .loadstore_stats()
+                .iter()
+                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!(
+                "total loadstore register operations = {}",
+                loadstore_register_ops
+            );
+
+            let loadstore_memory_ops: u64 = state
+                .ctx
+                .loadstore_stats()
+                .iter()
+                .filter(|((addr, _), _)| *addr == RV32_MEMORY_AS)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!(
+                "total loadstore memory operations = {}",
+                loadstore_memory_ops
+            );
+
+            const SP: u32 = 8;
+
+            let all_sp_ops: u64 = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, ptr), _)| *addr == RV32_MEMORY_AS && *ptr == SP)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!("total stack pointer operations = {}", all_sp_ops);
+
+            let loadstore_sp_ops: u64 = state
+                .ctx
+                .loadstore_stats()
+                .iter()
+                .filter(|((addr, ptr), _)| *addr == RV32_MEMORY_AS && *ptr == SP)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!(
+                "total stack pointer loadstore operations = {}",
+                loadstore_sp_ops
+            );
+        }
 
         Ok(VmState {
             instret: state.instret,

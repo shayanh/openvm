@@ -482,7 +482,7 @@ unsafe fn execute_e12_impl<
     vm_state: &mut VmSegmentState<F, CTX>,
 ) {
     let rs1_bytes: [u8; RV32_REGISTER_NUM_LIMBS] =
-        vm_state.vm_read(RV32_REGISTER_AS, pre_compute.b as u32);
+        vm_state.vm_read_from_loadstore(RV32_REGISTER_AS, pre_compute.b as u32);
     let rs1_val = u32::from_le_bytes(rs1_bytes);
     let ptr_val = rs1_val.wrapping_add(pre_compute.imm_extended);
     // sign_extend([r32{c,g}(b):2]_e)`
@@ -491,9 +491,9 @@ unsafe fn execute_e12_impl<
     let ptr_val = ptr_val - shift_amount; // aligned ptr
 
     let read_data: [u8; RV32_REGISTER_NUM_LIMBS] = if OP::IS_LOAD {
-        vm_state.vm_read(pre_compute.e as u32, ptr_val)
+        vm_state.vm_read_from_loadstore(pre_compute.e as u32, ptr_val)
     } else {
-        vm_state.vm_read(RV32_REGISTER_AS, pre_compute.a as u32)
+        vm_state.vm_read_from_loadstore(RV32_REGISTER_AS, pre_compute.a as u32)
     };
 
     // We need to write 4 u32s for STORE.
@@ -510,9 +510,9 @@ unsafe fn execute_e12_impl<
 
     if ENABLED {
         if OP::IS_LOAD {
-            vm_state.vm_write(RV32_REGISTER_AS, pre_compute.a as u32, &write_data);
+            vm_state.vm_write_from_loadstore(RV32_REGISTER_AS, pre_compute.a as u32, &write_data);
         } else {
-            vm_state.vm_write(pre_compute.e as u32, ptr_val, &write_data);
+            vm_state.vm_write_from_loadstore(pre_compute.e as u32, ptr_val, &write_data);
         }
     }
 

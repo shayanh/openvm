@@ -73,7 +73,22 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
         Ctx: E1ExecutionCtx,
     {
         self.ctx
-            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32);
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, false);
+        self.host_read(addr_space, ptr)
+    }
+
+    /// Runtime read operation for a block of memory
+    #[inline(always)]
+    pub fn vm_read_from_loadstore<T: Copy + Debug, const BLOCK_SIZE: usize>(
+        &mut self,
+        addr_space: u32,
+        ptr: u32,
+    ) -> [T; BLOCK_SIZE]
+    where
+        Ctx: E1ExecutionCtx,
+    {
+        self.ctx
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, true);
         self.host_read(addr_space, ptr)
     }
 
@@ -88,7 +103,22 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
         Ctx: E1ExecutionCtx,
     {
         self.ctx
-            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32);
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, false);
+        self.host_write(addr_space, ptr, data)
+    }
+
+    /// Runtime write operation for a block of memory
+    #[inline(always)]
+    pub fn vm_write_from_loadstore<T: Copy + Debug, const BLOCK_SIZE: usize>(
+        &mut self,
+        addr_space: u32,
+        ptr: u32,
+        data: &[T; BLOCK_SIZE],
+    ) where
+        Ctx: E1ExecutionCtx,
+    {
+        self.ctx
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, true);
         self.host_write(addr_space, ptr, data)
     }
 
@@ -97,7 +127,8 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
     where
         Ctx: E1ExecutionCtx,
     {
-        self.ctx.on_memory_operation(addr_space, ptr, len as u32);
+        self.ctx
+            .on_memory_operation(addr_space, ptr, len as u32, false);
         self.host_read_slice(addr_space, ptr, len)
     }
 

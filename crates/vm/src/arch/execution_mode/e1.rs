@@ -1,11 +1,11 @@
-use openvm_instructions::riscv::RV32_REGISTER_AS;
+use std::collections::HashMap;
 
 use crate::arch::{execution_mode::E1ExecutionCtx, VmSegmentState};
 
 pub struct E1Ctx {
     instret_end: u64,
-    sp_ops: u64,
-    reg_ops: u64,
+    stats: HashMap<(u32, u32), u64>, // (address_space, ptr) => cnt
+    loadstore_stats: HashMap<(u32, u32), u64>, // (address_space, ptr) => cnt
 }
 
 impl E1Ctx {
@@ -16,17 +16,17 @@ impl E1Ctx {
             } else {
                 u64::MAX
             },
-            sp_ops: 0,
-            reg_ops: 0,
+            stats: HashMap::new(),
+            loadstore_stats: HashMap::new(),
         }
     }
 
-    pub fn sp_ops(&self) -> u64 {
-        self.sp_ops
+    pub fn stats(&self) -> &HashMap<(u32, u32), u64> {
+        &self.stats
     }
 
-    pub fn reg_ops(&self) -> u64 {
-        self.reg_ops
+    pub fn loadstore_stats(&self) -> &HashMap<(u32, u32), u64> {
+        &self.loadstore_stats
     }
 }
 
@@ -38,13 +38,20 @@ impl Default for E1Ctx {
 
 impl E1ExecutionCtx for E1Ctx {
     #[inline(always)]
-    fn on_memory_operation(&mut self, address_space: u32, ptr: u32, _size: u32) {
-        if address_space == RV32_REGISTER_AS {
-            self.reg_ops += 1;
-            if ptr == 8 {
-                self.sp_ops += 1
-            }
+    fn on_memory_operation(
+        &mut self,
+        address_space: u32,
+        ptr: u32,
+        _size: u32,
+        is_load_store: bool,
+    ) {
+        if is_load_store {
+            *self
+                .loadstore_stats
+                .entry((address_space, ptr))
+                .or_insert(0) += 1;
         }
+        *self.stats.entry((address_space, ptr)).or_insert(0) += 1;
     }
 
     #[inline(always)]
