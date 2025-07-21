@@ -73,7 +73,7 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
         Ctx: E1ExecutionCtx,
     {
         self.ctx
-            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, false);
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, false, false);
         self.host_read(addr_space, ptr)
     }
 
@@ -88,7 +88,7 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
         Ctx: E1ExecutionCtx,
     {
         self.ctx
-            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, true);
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, true, false);
         self.host_read(addr_space, ptr)
     }
 
@@ -103,7 +103,7 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
         Ctx: E1ExecutionCtx,
     {
         self.ctx
-            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, false);
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, false, true);
         self.host_write(addr_space, ptr, data)
     }
 
@@ -118,7 +118,7 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
         Ctx: E1ExecutionCtx,
     {
         self.ctx
-            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, true);
+            .on_memory_operation(addr_space, ptr, BLOCK_SIZE as u32, true, true);
         self.host_write(addr_space, ptr, data)
     }
 
@@ -128,7 +128,7 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
         Ctx: E1ExecutionCtx,
     {
         self.ctx
-            .on_memory_operation(addr_space, ptr, len as u32, false);
+            .on_memory_operation(addr_space, ptr, len as u32, false, false);
         self.host_read_slice(addr_space, ptr, len)
     }
 

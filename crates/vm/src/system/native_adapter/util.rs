@@ -53,7 +53,7 @@ where
 {
     state
         .ctx
-        .on_memory_operation(NATIVE_AS, ptr, N as u32, false);
+        .on_memory_operation(NATIVE_AS, ptr, N as u32, false, false);
 
     memory_read_native(state.memory, ptr)
 }
@@ -89,7 +89,7 @@ pub fn memory_write_native_from_state<Ctx, F, const N: usize>(
 {
     state
         .ctx
-        .on_memory_operation(NATIVE_AS, ptr, N as u32, false);
+        .on_memory_operation(NATIVE_AS, ptr, N as u32, false, true);
 
     memory_write_native(state.memory, ptr, data)
 }

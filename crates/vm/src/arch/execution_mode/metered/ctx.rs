@@ -201,6 +201,7 @@ impl<const PAGE_BITS: usize> E1ExecutionCtx for MeteredCtx<PAGE_BITS> {
         ptr: u32,
         size: u32,
         _is_load_store: bool,
+        _is_write: bool,
     ) {
         debug_assert!(
             address_space != RV32_IMM_AS,

@@ -29,7 +29,10 @@ use thiserror::Error;
 use tracing::info_span;
 
 use super::{
-    execution_mode::{e1::E1Ctx, metered::ctx::DEFAULT_PAGE_BITS},
+    execution_mode::{
+        e1::{E1Ctx, MemOp},
+        metered::ctx::DEFAULT_PAGE_BITS,
+    },
     ChipId, ExecutionError, InsExecutorE1, MemoryConfig, VmChipComplex, VmComplexTraceHeights,
     VmConfig, VmInventoryError, CONNECTOR_AIR_ID, MERKLE_AIR_ID, PROGRAM_AIR_ID,
     PROGRAM_CACHED_TRACE_INDEX, PUBLIC_VALUES_AIR_ID,
@@ -230,25 +233,68 @@ where
                 .ctx
                 .stats()
                 .iter()
-                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
+                .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
                 .map(|(_, cnt)| cnt)
                 .sum();
             println!("total register operations = {}", all_register_ops);
+
+            let all_register_read_ops: u64 = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, _, mem_op), _)| {
+                    *addr == RV32_REGISTER_AS && *mem_op == MemOp::Read
+                })
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!("total register read operations = {}", all_register_read_ops);
+
+            let all_register_write_ops: u64 = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, _, mem_op), _)| {
+                    *addr == RV32_REGISTER_AS && *mem_op == MemOp::Write
+                })
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!(
+                "total register write operations = {}",
+                all_register_write_ops
+            );
 
             let all_memory_ops: u64 = state
                 .ctx
                 .stats()
                 .iter()
-                .filter(|((addr, _), _)| *addr == RV32_MEMORY_AS)
+                .filter(|((addr, _, _), _)| *addr == RV32_MEMORY_AS)
                 .map(|(_, cnt)| cnt)
                 .sum();
             println!("total memory operations = {}", all_memory_ops);
+
+            let all_memory_read_ops: u64 = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, _, mem_op), _)| *addr == RV32_MEMORY_AS && *mem_op == MemOp::Read)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!("total memory read operations = {}", all_memory_read_ops);
+
+            let all_memory_write_ops: u64 = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, _, mem_op), _)| *addr == RV32_MEMORY_AS && *mem_op == MemOp::Write)
+                .map(|(_, cnt)| cnt)
+                .sum();
+            println!("total memory write operations = {}", all_memory_write_ops);
 
             let loadstore_register_ops: u64 = state
                 .ctx
                 .loadstore_stats()
                 .iter()
-                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
+                .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
                 .map(|(_, cnt)| cnt)
                 .sum();
             println!(
@@ -260,7 +306,7 @@ where
                 .ctx
                 .loadstore_stats()
                 .iter()
-                .filter(|((addr, _), _)| *addr == RV32_MEMORY_AS)
+                .filter(|((addr, _, _), _)| *addr == RV32_MEMORY_AS)
                 .map(|(_, cnt)| cnt)
                 .sum();
             println!(
@@ -268,51 +314,28 @@ where
                 loadstore_memory_ops
             );
 
-            const SP: u32 = 8;
-
-            let all_sp_ops: u64 = state
-                .ctx
-                .stats()
-                .iter()
-                .filter(|((addr, ptr), _)| *addr == RV32_REGISTER_AS && *ptr == SP)
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!("total stack pointer operations = {}", all_sp_ops);
-
-            let loadstore_sp_ops: u64 = state
-                .ctx
-                .loadstore_stats()
-                .iter()
-                .filter(|((addr, ptr), _)| *addr == RV32_REGISTER_AS && *ptr == SP)
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!(
-                "total stack pointer loadstore operations = {}",
-                loadstore_sp_ops
-            );
-
             let per_reg_ops = state
                 .ctx
                 .stats()
                 .iter()
-                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
-                .map(|((_, ptr), cnt)| (ptr, cnt))
+                .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
+                .map(|((_, ptr, mem_op), cnt)| (ptr, mem_op, cnt))
                 .collect_vec();
             println!("per register ops");
-            for (reg, cnt) in per_reg_ops {
-                println!("Register {:?}: {}", reg, cnt);
+            for (reg, mem_op, cnt) in per_reg_ops {
+                println!("Register {:?}, Operation: {:?}: {}", reg, mem_op, cnt);
             }
 
             let per_reg_ops_loadstore = state
                 .ctx
                 .loadstore_stats()
                 .iter()
-                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
-                .map(|((_, ptr), cnt)| (ptr, cnt))
+                .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
+                .map(|((_, ptr, mem_op), cnt)| (ptr, mem_op, cnt))
                 .collect_vec();
             println!("per register ops");
-            for (reg, cnt) in per_reg_ops_loadstore {
-                println!("Register {:?}: {}", reg, cnt);
+            for (reg, mem_op, cnt) in per_reg_ops_loadstore {
+                println!("Register {:?}, Operation: {:?}: {}", reg, mem_op, cnt);
             }
         }
 
