@@ -5,6 +5,7 @@ use std::{
     sync::Arc,
 };
 
+use itertools::Itertools;
 use openvm_circuit::system::program::trace::compute_exe_commit;
 use openvm_instructions::{
     exe::{SparseMemoryImage, VmExe},
@@ -289,6 +290,30 @@ where
                 "total stack pointer loadstore operations = {}",
                 loadstore_sp_ops
             );
+
+            let per_reg_ops = state
+                .ctx
+                .stats()
+                .iter()
+                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
+                .map(|((_, ptr), cnt)| (ptr, cnt))
+                .collect_vec();
+            println!("per register ops");
+            for (reg, cnt) in per_reg_ops {
+                println!("Register {:?}: {}", reg, cnt);
+            }
+
+            let per_reg_ops_loadstore = state
+                .ctx
+                .loadstore_stats()
+                .iter()
+                .filter(|((addr, _), _)| *addr == RV32_REGISTER_AS)
+                .map(|((_, ptr), cnt)| (ptr, cnt))
+                .collect_vec();
+            println!("per register ops");
+            for (reg, cnt) in per_reg_ops_loadstore {
+                println!("Register {:?}: {}", reg, cnt);
+            }
         }
 
         Ok(VmState {
