@@ -290,13 +290,11 @@ unsafe fn execute_e12_impl<
     vm_state: &mut VmSegmentState<F, CTX>,
 ) {
     let rs1 = if A_IS_IMM {
-        vm_state.imm_cnt += 1;
         transmute_u32_to_field(&pre_compute.a_or_imm)
     } else {
         vm_state.vm_read::<F, 1>(NATIVE_AS, pre_compute.a_or_imm)[0]
     };
     let rs2 = if B_IS_IMM {
-        vm_state.imm_cnt += 1;
         transmute_u32_to_field(&pre_compute.b_or_imm)
     } else {
         vm_state.vm_read::<F, 1>(NATIVE_AS, pre_compute.b_or_imm)[0]

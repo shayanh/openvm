@@ -234,13 +234,13 @@ where
             let frac1: f64  = state.imm_cnt as f64 / state.instret as f64;
             println!("- imm_cnt / instret = {:.2}", frac1);
 
-            let all_reg_ops: u64 = state
+            let all_reg_ops: u64 = state.imm_cnt + state
                 .ctx
                 .stats()
                 .iter()
                 .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
                 .map(|(_, cnt)| cnt)
-                .sum();
+                .sum::<u64>();
             println!("- all_reg_ops = {}", all_reg_ops);
 
             let frac2: f64 = state.imm_cnt as f64 / all_reg_ops as f64;
@@ -257,7 +257,7 @@ where
 
             let frac3: f64 = zero_reg_ops as f64 / all_reg_ops as f64;
             println!("- zero_reg_ops / all_reg_ops = {:.2}", frac3);
-            
+
             println!("- (zero_reg_ops + imm_cnt) / all_reg_ops = {:.2}", frac2 + frac3);
 
             // let all_register_read_ops: u64 = state

@@ -469,13 +469,11 @@ unsafe fn execute_e12_impl<
 ) {
     // Read values based on the adapter logic
     let b_val = if A_IS_IMM {
-        vm_state.imm_cnt += 1;
         transmute_u32_to_field(&pre_compute.b_or_imm)
     } else {
         vm_state.vm_read::<F, 1>(pre_compute.e, pre_compute.b_or_imm)[0]
     };
     let c_val = if B_IS_IMM {
-        vm_state.imm_cnt += 1;
         transmute_u32_to_field(&pre_compute.c_or_imm)
     } else {
         vm_state.vm_read::<F, 1>(pre_compute.f, pre_compute.c_or_imm)[0]
