@@ -31,6 +31,7 @@ use crate::{
 
 pub struct VmSegmentState<F, Ctx> {
     pub instret: u64,
+    pub imm_cnt: u64,
     pub pc: u32,
     pub memory: GuestMemory,
     pub streams: Streams<F>,
@@ -50,6 +51,7 @@ impl<F, Ctx> VmSegmentState<F, Ctx> {
     ) -> Self {
         Self {
             instret,
+            imm_cnt: 0,
             pc,
             memory: if let Some(mem) = memory {
                 mem

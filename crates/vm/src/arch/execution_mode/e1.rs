@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::arch::{execution_mode::E1ExecutionCtx, VmSegmentState};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub enum MemOp {
     Read,
     Write,

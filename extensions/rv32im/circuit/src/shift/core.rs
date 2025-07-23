@@ -507,6 +507,7 @@ unsafe fn execute_e12_impl<
 ) {
     let rs1 = state.vm_read::<u8, 4>(RV32_REGISTER_AS, pre_compute.b as u32);
     let rs2 = if IS_IMM {
+        state.imm_cnt += 1;
         pre_compute.c.to_le_bytes()
     } else {
         state.vm_read::<u8, 4>(RV32_REGISTER_AS, pre_compute.c)

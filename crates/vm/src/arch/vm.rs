@@ -27,7 +27,7 @@ use rand::{rngs::StdRng, SeedableRng};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::info_span;
-
+use openvm_instructions::riscv::RV32_IMM_AS;
 use super::{
     execution_mode::{
         e1::{E1Ctx, MemOp},
@@ -229,114 +229,138 @@ where
         let state = interpreter.execute(ctx, inputs)?;
 
         {
-            let all_register_ops: u64 = state
+            println!("- instret = {}", state.instret);
+            println!("- imm_cnt = {}", state.imm_cnt);
+            let frac1: f64  = state.imm_cnt as f64 / state.instret as f64;
+            println!("- imm_cnt / instret = {:.2}", frac1);
+
+            let all_reg_ops: u64 = state
                 .ctx
                 .stats()
                 .iter()
                 .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
                 .map(|(_, cnt)| cnt)
                 .sum();
-            println!("total register operations = {}", all_register_ops);
+            println!("- all_reg_ops = {}", all_reg_ops);
 
-            let all_register_read_ops: u64 = state
+            let frac2: f64 = state.imm_cnt as f64 / all_reg_ops as f64;
+            println!("- imm_cnt / all_reg_ops = {:.2}", frac2);
+
+            let zero_reg_ops: u64 = state
                 .ctx
                 .stats()
                 .iter()
-                .filter(|((addr, _, mem_op), _)| {
-                    *addr == RV32_REGISTER_AS && *mem_op == MemOp::Read
-                })
+                .filter(|((addr, ptr, _), _)| *addr == RV32_REGISTER_AS && *ptr == 0)
                 .map(|(_, cnt)| cnt)
                 .sum();
-            println!("total register read operations = {}", all_register_read_ops);
+            println!("- zero_reg_ops = {}", zero_reg_ops);
 
-            let all_register_write_ops: u64 = state
-                .ctx
-                .stats()
-                .iter()
-                .filter(|((addr, _, mem_op), _)| {
-                    *addr == RV32_REGISTER_AS && *mem_op == MemOp::Write
-                })
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!(
-                "total register write operations = {}",
-                all_register_write_ops
-            );
+            let frac3: f64 = zero_reg_ops as f64 / all_reg_ops as f64;
+            println!("- zero_reg_ops / all_reg_ops = {:.2}", frac3);
+            
+            println!("- (zero_reg_ops + imm_cnt) / all_reg_ops = {:.2}", frac2 + frac3);
 
-            let all_memory_ops: u64 = state
-                .ctx
-                .stats()
-                .iter()
-                .filter(|((addr, _, _), _)| *addr == RV32_MEMORY_AS)
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!("total memory operations = {}", all_memory_ops);
+            // let all_register_read_ops: u64 = state
+            //     .ctx
+            //     .stats()
+            //     .iter()
+            //     .filter(|((addr, _, mem_op), _)| {
+            //         *addr == RV32_REGISTER_AS && *mem_op == MemOp::Read
+            //     })
+            //     .map(|(_, cnt)| cnt)
+            //     .sum();
+            // println!("total register read operations = {}", all_register_read_ops);
+            //
+            // let all_register_write_ops: u64 = state
+            //     .ctx
+            //     .stats()
+            //     .iter()
+            //     .filter(|((addr, _, mem_op), _)| {
+            //         *addr == RV32_REGISTER_AS && *mem_op == MemOp::Write
+            //     })
+            //     .map(|(_, cnt)| cnt)
+            //     .sum();
+            // println!(
+            //     "total register write operations = {}",
+            //     all_register_write_ops
+            // );
+            //
+            // let all_memory_ops: u64 = state
+            //     .ctx
+            //     .stats()
+            //     .iter()
+            //     .filter(|((addr, _, _), _)| *addr == RV32_MEMORY_AS)
+            //     .map(|(_, cnt)| cnt)
+            //     .sum();
+            // println!("total memory operations = {}", all_memory_ops);
+            //
+            // let all_memory_read_ops: u64 = state
+            //     .ctx
+            //     .stats()
+            //     .iter()
+            //     .filter(|((addr, _, mem_op), _)| *addr == RV32_MEMORY_AS && *mem_op == MemOp::Read)
+            //     .map(|(_, cnt)| cnt)
+            //     .sum();
+            // println!("total memory read operations = {}", all_memory_read_ops);
+            //
+            // let all_memory_write_ops: u64 = state
+            //     .ctx
+            //     .stats()
+            //     .iter()
+            //     .filter(|((addr, _, mem_op), _)| *addr == RV32_MEMORY_AS && *mem_op == MemOp::Write)
+            //     .map(|(_, cnt)| cnt)
+            //     .sum();
+            // println!("total memory write operations = {}", all_memory_write_ops);
 
-            let all_memory_read_ops: u64 = state
-                .ctx
-                .stats()
-                .iter()
-                .filter(|((addr, _, mem_op), _)| *addr == RV32_MEMORY_AS && *mem_op == MemOp::Read)
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!("total memory read operations = {}", all_memory_read_ops);
+            // let loadstore_register_ops: u64 = state
+            //     .ctx
+            //     .loadstore_stats()
+            //     .iter()
+            //     .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
+            //     .map(|(_, cnt)| cnt)
+            //     .sum();
+            // println!(
+            //     "total loadstore register operations = {}",
+            //     loadstore_register_ops
+            // );
+            //
+            // let loadstore_memory_ops: u64 = state
+            //     .ctx
+            //     .loadstore_stats()
+            //     .iter()
+            //     .filter(|((addr, _, _), _)| *addr == RV32_MEMORY_AS)
+            //     .map(|(_, cnt)| cnt)
+            //     .sum();
+            // println!(
+            //     "total loadstore memory operations = {}",
+            //     loadstore_memory_ops
+            // );
 
-            let all_memory_write_ops: u64 = state
-                .ctx
-                .stats()
-                .iter()
-                .filter(|((addr, _, mem_op), _)| *addr == RV32_MEMORY_AS && *mem_op == MemOp::Write)
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!("total memory write operations = {}", all_memory_write_ops);
+            // let per_reg_ops = state
+            //     .ctx
+            //     .stats()
+            //     .iter()
+            //     .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
+            //     .map(|((_, ptr, mem_op), cnt)| (ptr, mem_op, cnt))
+            //     .sorted_by_key(|(ptr, mem_op, _)| (*ptr, *mem_op))
+            //     .collect_vec();
+            // println!("per register ops");
+            // for (reg, mem_op, cnt) in per_reg_ops {
+            //     println!("Register {}, Operation: {:?}: {}", riscv_register_name(reg / 4), mem_op, cnt);
+            // }
 
-            let loadstore_register_ops: u64 = state
-                .ctx
-                .loadstore_stats()
-                .iter()
-                .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!(
-                "total loadstore register operations = {}",
-                loadstore_register_ops
-            );
-
-            let loadstore_memory_ops: u64 = state
-                .ctx
-                .loadstore_stats()
-                .iter()
-                .filter(|((addr, _, _), _)| *addr == RV32_MEMORY_AS)
-                .map(|(_, cnt)| cnt)
-                .sum();
-            println!(
-                "total loadstore memory operations = {}",
-                loadstore_memory_ops
-            );
-
-            let per_reg_ops = state
-                .ctx
-                .stats()
-                .iter()
-                .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
-                .map(|((_, ptr, mem_op), cnt)| (ptr, mem_op, cnt))
-                .collect_vec();
-            println!("per register ops");
-            for (reg, mem_op, cnt) in per_reg_ops {
-                println!("Register {:?}, Operation: {:?}: {}", reg, mem_op, cnt);
-            }
-
-            let per_reg_ops_loadstore = state
-                .ctx
-                .loadstore_stats()
-                .iter()
-                .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
-                .map(|((_, ptr, mem_op), cnt)| (ptr, mem_op, cnt))
-                .collect_vec();
-            println!("per register ops");
-            for (reg, mem_op, cnt) in per_reg_ops_loadstore {
-                println!("Register {:?}, Operation: {:?}: {}", reg, mem_op, cnt);
-            }
+            // let per_reg_ops_loadstore = state
+            //     .ctx
+            //     .loadstore_stats()
+            //     .iter()
+            //     .filter(|((addr, _, _), _)| *addr == RV32_REGISTER_AS)
+            //     .map(|((_, ptr, mem_op), cnt)| (ptr, mem_op, cnt))
+            //     .sorted_by_key(|(ptr, mem_op, _)| (*ptr, *mem_op))
+            //     .collect_vec();
+            // println!("per register ops");
+            // for (reg, mem_op, cnt) in per_reg_ops_loadstore {
+            //     println!("Register {}, Operation: {:?}: {}", riscv_register_name(reg / 4), mem_op, cnt);
+            // }
         }
 
         Ok(VmState {
@@ -1264,5 +1288,43 @@ fn check_termination(exit_code: Result<Option<u32>, ExecutionError>) -> Result<(
     match exit_code {
         Some(code) => check_exit_code(code),
         None => Err(ExecutionError::DidNotTerminate),
+    }
+}
+
+fn riscv_register_name(index: u32) -> &'static str {
+    match index {
+        0 => "zero",
+        1 => "ra",
+        2 => "sp",
+        3 => "gp",
+        4 => "tp",
+        5 => "t0",
+        6 => "t1",
+        7 => "t2",
+        8 => "s0",
+        9 => "s1",
+        10 => "a0",
+        11 => "a1",
+        12 => "a2",
+        13 => "a3",
+        14 => "a4",
+        15 => "a5",
+        16 => "a6",
+        17 => "a7",
+        18 => "s2",
+        19 => "s3",
+        20 => "s4",
+        21 => "s5",
+        22 => "s6",
+        23 => "s7",
+        24 => "s8",
+        25 => "s9",
+        26 => "s10",
+        27 => "s11",
+        28 => "t3",
+        29 => "t4",
+        30 => "t5",
+        31 => "t6",
+        _ => "invalid", // handle out-of-range inputs
     }
 }
